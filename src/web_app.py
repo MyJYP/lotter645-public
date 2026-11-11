@@ -272,50 +272,12 @@ def sidebar(loader):
 
     st.sidebar.markdown("---")
 
-    # 후원 섹션
-    st.sidebar.success(
-        """
-        ### ☕ 분석이 도움되셨나요?
-
-        이 서비스가 유용하셨다면
-        커피 한 잔으로 응원해주세요! 🙏
-        """
+    st.sidebar.link_button(
+        "사랑의열매에 기부하기",
+        "https://www.chest.or.kr/ct/lmpscntr/initIndvdl.do",
+        width="stretch",
     )
-
-    # 투네이션 버튼 (한국 사용자용)
-    st.sidebar.markdown(
-        """
-        <div style="text-align: center; margin: 10px 0;">
-            <a href="https://toon.at/donate/251227" target="_blank"
-               style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                      color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;
-                      font-weight: bold; font-size: 14px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                🎁 투네이션 후원하기 (국내)
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.sidebar.caption("💳 100원부터 익명 후원 가능 (카카오페이, 토스)")
-
-    st.sidebar.markdown("<div style='margin: 10px 0;'></div>", unsafe_allow_html=True)
-
-    # Buy Me a Coffee 버튼 (해외 사용자용)
-    st.sidebar.markdown(
-        """
-        <div style="text-align: center; margin: 10px 0;">
-            <a href="https://buymeacoffee.com/251227" target="_blank">
-                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-                     alt="Buy Me A Coffee"
-                     style="height: 50px !important;width: 200px !important;">
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.sidebar.caption("☕ 해외 사용자는 Buy Me a Coffee 이용 (카드/PayPal)")
+    st.sidebar.caption("사회복지공동모금회 공식 일시기부 페이지로 이동합니다.")
 
     st.sidebar.markdown("---")
 
@@ -866,54 +828,6 @@ def recommendation_page(loader, model, recommender):
                 for i in range(len(sorted(combo))-1)
             ))
             st.metric("연속 번호 포함 비율", f"{has_consecutive/len(display_results)*100:.0f}%")
-
-        # 추천 후 후원 안내 (전환율이 가장 높은 시점)
-        st.markdown("---")
-
-        col_left, col_center, col_right = st.columns([1, 2, 1])
-
-        with col_center:
-            st.success(
-                """
-                ### ☕ 분석이 도움이 되셨나요?
-
-                이 서비스가 유용하셨다면 커피 한 잔으로 응원해주세요!
-                더 나은 분석과 기능 개발에 큰 힘이 됩니다. 🙏
-                """
-            )
-
-            # 투네이션 버튼 (국내 사용자)
-            st.markdown(
-                """
-                <div style="text-align: center; margin: 15px 0;">
-                    <a href="https://toon.at/donate/251227" target="_blank"
-                       style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                              color: white; padding: 14px 32px; border-radius: 10px; text-decoration: none;
-                              font-weight: bold; font-size: 16px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
-                        🎁 투네이션 후원하기 (국내)
-                    </a>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            st.caption("💳 100원부터 익명 후원 가능 (카카오페이, 토스)")
-
-            st.markdown("<div style='margin: 15px 0;'></div>", unsafe_allow_html=True)
-
-            # Buy Me a Coffee 버튼 (해외 사용자)
-            st.markdown(
-                """
-                <div style="text-align: center; margin: 15px 0;">
-                    <a href="https://buymeacoffee.com/251227" target="_blank">
-                        <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
-                             alt="Buy Me A Coffee"
-                             style="height: 60px !important;width: 217px !important;">
-                    </a>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-            st.caption("☕ 해외 사용자는 Buy Me a Coffee 이용 (카드/PayPal)")
 
     # 이력 조회 섹션 (Phase 2)
     st.markdown("---")
