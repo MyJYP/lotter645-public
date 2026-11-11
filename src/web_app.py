@@ -272,12 +272,14 @@ def sidebar(loader):
 
     st.sidebar.markdown("---")
 
-    st.sidebar.link_button(
-        "사랑의열매에 기부하기",
-        "https://www.chest.or.kr/ct/lmpscntr/initIndvdl.do",
-        width="stretch",
-    )
-    st.sidebar.caption("사회복지공동모금회 공식 일시기부 페이지로 이동합니다.")
+    st.sidebar.markdown("**기부 안내**")
+    st.sidebar.caption("각 단체의 공식 기부 페이지로 이동합니다.")
+    for name, url in (
+        ("사랑의열매", "https://www.chest.or.kr/ct/lmpscntr/initIndvdl.do"),
+        ("국경없는의사회", "https://msf.or.kr/onetime/"),
+        ("유니세프한국위원회", "https://www.unicef.or.kr/involve/individual/oneoff/"),
+    ):
+        st.sidebar.link_button(name, url, width="stretch")
 
     st.sidebar.markdown("---")
 
