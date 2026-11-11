@@ -1,0 +1,513 @@
+{
+  "timestamp": "2026-01-08T21:08:01.452374",
+  "strategy": "score",
+  "weights": {
+    "freq_weight": 34.36524022667953,
+    "trend_weight": 16.84554592792388,
+    "absence_weight": 30.51943792826222,
+    "hotness_weight": 10.719087281667495
+  },
+  "score": 18.8,
+  "optimization_history": [
+    {
+      "trial": 1,
+      "weights": {
+        "freq_weight": 37.38457003959498,
+        "trend_weight": 43.714076807592384,
+        "absence_weight": 32.15999690411857,
+        "hotness_weight": 13.016682518743654
+      },
+      "score": 0.60348458539591
+    },
+    {
+      "trial": 2,
+      "weights": {
+        "freq_weight": 22.618121922363276,
+        "trend_weight": 20.709635039028107,
+        "absence_weight": 12.384399525521427,
+        "hotness_weight": 38.001840001726904
+      },
+      "score": 16.475711377686174
+    },
+    {
+      "trial": 3,
+      "weights": {
+        "freq_weight": 22.587115231939116,
+        "trend_weight": 36.2175466117952,
+        "absence_weight": 18.84711653712325,
+        "hotness_weight": 37.00916564091902
+      },
+      "score": 8.626414828643098
+    },
+    {
+      "trial": 4,
+      "weights": {
+        "freq_weight": 20.5952066599221,
+        "trend_weight": 19.865100307759338,
+        "absence_weight": 24.647884695710278,
+        "hotness_weight": 14.195956298302734
+      },
+      "score": 10.990216616202563
+    },
+    {
+      "trial": 5,
+      "weights": {
+        "freq_weight": 45.912915344099076,
+        "trend_weight": 25.97602020561589,
+        "absence_weight": 12.676226570504916,
+        "hotness_weight": 39.91381622732886
+      },
+      "score": 9.579094321117534
+    },
+    {
+      "trial": 6,
+      "weights": {
+        "freq_weight": 13.636376486951756,
+        "trend_weight": 11.884655016989383,
+        "absence_weight": 8.83771956227307,
+        "hotness_weight": 26.960611459608153
+      },
+      "score": 14.891092050023726
+    },
+    {
+      "trial": 7,
+      "weights": {
+        "freq_weight": 26.88639867198736,
+        "trend_weight": 12.541108246078284,
+        "absence_weight": 18.356675027728787,
+        "hotness_weight": 39.86424830840339
+      },
+      "score": 9.947349687863776
+    },
+    {
+      "trial": 8,
+      "weights": {
+        "freq_weight": 48.84313510454473,
+        "trend_weight": 44.43118808937992,
+        "absence_weight": 5.401835767998687,
+        "hotness_weight": 30.22526367760681
+      },
+      "score": 12.816154937699606
+    },
+    {
+      "trial": 9,
+      "weights": {
+        "freq_weight": 31.478813216351806,
+        "trend_weight": 20.673007598101712,
+        "absence_weight": 27.433662950293282,
+        "hotness_weight": 8.904326075855675
+      },
+      "score": 8.173586712579175
+    },
+    {
+      "trial": 10,
+      "weights": {
+        "freq_weight": 28.148948253168257,
+        "trend_weight": 48.15263710084321,
+        "absence_weight": 35.654852913236795,
+        "hotness_weight": 14.218616776288176
+      },
+      "score": 9.411018925345608
+    },
+    {
+      "trial": 11,
+      "weights": {
+        "freq_weight": 17.146075221205255,
+        "trend_weight": 46.50511357379282,
+        "absence_weight": 35.46814994428684,
+        "hotness_weight": 15.445567700702151
+      },
+      "score": 12.012250503480898
+    },
+    {
+      "trial": 12,
+      "weights": {
+        "freq_weight": 34.35880845752689,
+        "trend_weight": 16.11357074198539,
+        "absence_weight": 31.687878002630296,
+        "hotness_weight": 23.878266054186902
+      },
+      "score": 14.638177798254496
+    },
+    {
+      "trial": 13,
+      "weights": {
+        "freq_weight": 31.2141468878071,
+        "trend_weight": 10.02287584511774,
+        "absence_weight": 16.34546199516356,
+        "hotness_weight": 5.6816859835041305
+      },
+      "score": 17.4670539857748
+    },
+    {
+      "trial": 14,
+      "weights": {
+        "freq_weight": 45.14887511292737,
+        "trend_weight": 43.26662117444718,
+        "absence_weight": 15.76299438909315,
+        "hotness_weight": 7.0273808272965645
+      },
+      "score": 16.506580465035963
+    },
+    {
+      "trial": 15,
+      "weights": {
+        "freq_weight": 47.87797781191976,
+        "trend_weight": 13.426138082715152,
+        "absence_weight": 22.00966621608148,
+        "hotness_weight": 7.422438146393427
+      },
+      "score": 14.299320706835953
+    },
+    {
+      "trial": 16,
+      "weights": {
+        "freq_weight": 40.63337717227951,
+        "trend_weight": 15.135658579990512,
+        "absence_weight": 21.634883233455596,
+        "hotness_weight": 24.243125772323037
+      },
+      "score": 4.983064624073111
+    },
+    {
+      "trial": 17,
+      "weights": {
+        "freq_weight": 44.897321643410294,
+        "trend_weight": 26.925517608035477,
+        "absence_weight": 12.41293719047287,
+        "hotness_weight": 23.875363107281043
+      },
+      "score": 13.722704098891553
+    },
+    {
+      "trial": 18,
+      "weights": {
+        "freq_weight": 18.046042535587837,
+        "trend_weight": 22.4686516520358,
+        "absence_weight": 39.83022748313131,
+        "hotness_weight": 27.745732017380874
+      },
+      "score": 8.236281577592676
+    },
+    {
+      "trial": 19,
+      "weights": {
+        "freq_weight": 30.703033641423623,
+        "trend_weight": 14.840167834730629,
+        "absence_weight": 12.864406796104507,
+        "hotness_weight": 16.832994675160936
+      },
+      "score": 11.060203906995987
+    },
+    {
+      "trial": 20,
+      "weights": {
+        "freq_weight": 19.20458930386308,
+        "trend_weight": 18.808695378062378,
+        "absence_weight": 7.484758010316138,
+        "hotness_weight": 27.088603504453463
+      },
+      "score": 4.304105535649702
+    },
+    {
+      "trial": 21,
+      "weights": {
+        "freq_weight": 46.216800520245116,
+        "trend_weight": 44.38541601014986,
+        "absence_weight": 7.48000724610287,
+        "hotness_weight": 13.330162202914833
+      },
+      "score": 12.576782231970075
+    },
+    {
+      "trial": 22,
+      "weights": {
+        "freq_weight": 18.569472294817544,
+        "trend_weight": 15.292473949001,
+        "absence_weight": 37.74299842032349,
+        "hotness_weight": 24.986508266384956
+      },
+      "score": 8.88621529466173
+    },
+    {
+      "trial": 23,
+      "weights": {
+        "freq_weight": 41.38477697163013,
+        "trend_weight": 42.29987991066574,
+        "absence_weight": 11.66434700266572,
+        "hotness_weight": 8.392578498008817
+      },
+      "score": 8.103762229239898
+    },
+    {
+      "trial": 24,
+      "weights": {
+        "freq_weight": 26.943144920796833,
+        "trend_weight": 28.680986721467,
+        "absence_weight": 30.517654731094773,
+        "hotness_weight": 28.567759155265552
+      },
+      "score": 18.502305973680166
+    },
+    {
+      "trial": 25,
+      "weights": {
+        "freq_weight": 13.936714846078356,
+        "trend_weight": 26.10485128409075,
+        "absence_weight": 16.875591188823712,
+        "hotness_weight": 35.15853877234768
+      },
+      "score": 4.67473907770137
+    },
+    {
+      "trial": 26,
+      "weights": {
+        "freq_weight": 17.60835633763246,
+        "trend_weight": 27.944541913325274,
+        "absence_weight": 19.765857394204147,
+        "hotness_weight": 14.749080063342916
+      },
+      "score": 4.69636122018349
+    },
+    {
+      "trial": 27,
+      "weights": {
+        "freq_weight": 46.93062397104051,
+        "trend_weight": 27.72522980213828,
+        "absence_weight": 35.147218666664074,
+        "hotness_weight": 24.26138593574468
+      },
+      "score": 0.9510605950677673
+    },
+    {
+      "trial": 28,
+      "weights": {
+        "freq_weight": 49.97129873650906,
+        "trend_weight": 43.44110340319808,
+        "absence_weight": 38.91486900496629,
+        "hotness_weight": 37.422844405284465
+      },
+      "score": 15.955479806988944
+    },
+    {
+      "trial": 29,
+      "weights": {
+        "freq_weight": 16.65244442415656,
+        "trend_weight": 29.42564501802874,
+        "absence_weight": 12.481155471971359,
+        "hotness_weight": 19.03641023923084
+      },
+      "score": 1.1023455194769638
+    },
+    {
+      "trial": 30,
+      "weights": {
+        "freq_weight": 25.158924759076644,
+        "trend_weight": 49.41235375118904,
+        "absence_weight": 14.282107036025318,
+        "hotness_weight": 32.44247106819993
+      },
+      "score": 8.554157305975894
+    },
+    {
+      "trial": 31,
+      "weights": {
+        "freq_weight": 26.920299439606517,
+        "trend_weight": 48.29270563438693,
+        "absence_weight": 39.83979413224498,
+        "hotness_weight": 24.451891319196637
+      },
+      "score": 13.506075575570929
+    },
+    {
+      "trial": 32,
+      "weights": {
+        "freq_weight": 16.191873010962567,
+        "trend_weight": 21.86831301978257,
+        "absence_weight": 38.90482777392056,
+        "hotness_weight": 25.271310178568967
+      },
+      "score": 10.193269785836357
+    },
+    {
+      "trial": 33,
+      "weights": {
+        "freq_weight": 39.919022415162566,
+        "trend_weight": 12.286610916299324,
+        "absence_weight": 25.446215806063993,
+        "hotness_weight": 22.599763402182976
+      },
+      "score": 16.031133970507764
+    },
+    {
+      "trial": 34,
+      "weights": {
+        "freq_weight": 16.29730911757933,
+        "trend_weight": 48.43115613097802,
+        "absence_weight": 7.80390128342054,
+        "hotness_weight": 11.503873634325313
+      },
+      "score": 11.18666000126052
+    },
+    {
+      "trial": 35,
+      "weights": {
+        "freq_weight": 37.00850214416361,
+        "trend_weight": 19.40815580003725,
+        "absence_weight": 9.196031488149346,
+        "hotness_weight": 36.16005599453031
+      },
+      "score": 4.628848538426148
+    },
+    {
+      "trial": 36,
+      "weights": {
+        "freq_weight": 33.78076614133765,
+        "trend_weight": 34.77526041328412,
+        "absence_weight": 19.672872036755535,
+        "hotness_weight": 25.428530125192864
+      },
+      "score": 9.828315052000827
+    },
+    {
+      "trial": 37,
+      "weights": {
+        "freq_weight": 47.38825030945709,
+        "trend_weight": 18.170367976941456,
+        "absence_weight": 30.06671302762952,
+        "hotness_weight": 13.35400834155461
+      },
+      "score": 7.440773919675585
+    },
+    {
+      "trial": 38,
+      "weights": {
+        "freq_weight": 36.86760891839885,
+        "trend_weight": 21.999883191950488,
+        "absence_weight": 16.06620186951489,
+        "hotness_weight": 31.315257234504074
+      },
+      "score": 1.3638105524713575
+    },
+    {
+      "trial": 39,
+      "weights": {
+        "freq_weight": 28.331420904743446,
+        "trend_weight": 49.93817763417769,
+        "absence_weight": 39.86337567492831,
+        "hotness_weight": 7.564125238487155
+      },
+      "score": 4.007301070620359
+    },
+    {
+      "trial": 40,
+      "weights": {
+        "freq_weight": 20.608016590016053,
+        "trend_weight": 47.33037511974836,
+        "absence_weight": 35.830246079025386,
+        "hotness_weight": 35.774458486959
+      },
+      "score": 6.947109268291019
+    },
+    {
+      "trial": 41,
+      "weights": {
+        "freq_weight": 16.30987329428928,
+        "trend_weight": 43.34979818559228,
+        "absence_weight": 29.623897378057983,
+        "hotness_weight": 26.408721800408255
+      },
+      "score": 18.55998159627228
+    },
+    {
+      "trial": 42,
+      "weights": {
+        "freq_weight": 36.1590527084293,
+        "trend_weight": 10.312924286086318,
+        "absence_weight": 33.598644729041155,
+        "hotness_weight": 15.478256326999226
+      },
+      "score": 12.471707841362255
+    },
+    {
+      "trial": 43,
+      "weights": {
+        "freq_weight": 47.557200157084154,
+        "trend_weight": 15.37164457573471,
+        "absence_weight": 9.040003464668576,
+        "hotness_weight": 8.746259219829618
+      },
+      "score": 10.400604448634539
+    },
+    {
+      "trial": 44,
+      "weights": {
+        "freq_weight": 20.893928492592654,
+        "trend_weight": 34.19319308120896,
+        "absence_weight": 30.116426549857927,
+        "hotness_weight": 12.125905931460853
+      },
+      "score": 11.923673627039499
+    },
+    {
+      "trial": 45,
+      "weights": {
+        "freq_weight": 20.559356065216377,
+        "trend_weight": 29.54127408597506,
+        "absence_weight": 36.686777187776315,
+        "hotness_weight": 34.613629965319944
+      },
+      "score": 1.7352111929993883
+    },
+    {
+      "trial": 46,
+      "weights": {
+        "freq_weight": 26.943030902549054,
+        "trend_weight": 21.067208958890067,
+        "absence_weight": 5.1240991180723805,
+        "hotness_weight": 31.989172805686948
+      },
+      "score": 11.977731493265937
+    },
+    {
+      "trial": 47,
+      "weights": {
+        "freq_weight": 20.47821049737393,
+        "trend_weight": 39.64923633391723,
+        "absence_weight": 24.308814739423696,
+        "hotness_weight": 19.969042164323778
+      },
+      "score": 0.18179035263679136
+    },
+    {
+      "trial": 48,
+      "weights": {
+        "freq_weight": 13.009754402950682,
+        "trend_weight": 45.32425573200572,
+        "absence_weight": 36.63750000459626,
+        "hotness_weight": 24.09566012219328
+      },
+      "score": 15.690386373857114
+    },
+    {
+      "trial": 49,
+      "weights": {
+        "freq_weight": 33.30038265959176,
+        "trend_weight": 15.923751422699306,
+        "absence_weight": 9.460593174874857,
+        "hotness_weight": 15.78904224755468
+      },
+      "score": 16.900851988360692
+    },
+    {
+      "trial": 50,
+      "weights": {
+        "freq_weight": 41.844892195521666,
+        "trend_weight": 44.42810328003611,
+        "absence_weight": 36.46236227842661,
+        "hotness_weight": 12.352678841891391
+      },
+      "score": 18.8
+    }
+  ]
+}

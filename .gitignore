@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.DS_Store
+.env
+.env.*
+secrets.toml
+credentials.json
+premium_codes.txt
+Data/fixed_mode_history.csv
+Data/backups/
