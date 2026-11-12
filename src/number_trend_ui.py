@@ -46,12 +46,12 @@ def _render_appearance(history, kind='main'):
     prefix = f'number_trend_{kind}'
     controls = st.columns(2)
     number = controls[0].selectbox('관심 번호', list(range(1, 46)), key=f'{prefix}_number')
-    period = controls[1].selectbox('표시 기간', [50, 100, 200, None], index=1,
-                                  format_func=lambda n: '전체' if n is None else f'최근 {n}회',
+    period = controls[1].selectbox('표시 기간', [50, 100, 200, 0], index=1,
+                                  format_func=lambda n: '전체' if n == 0 else f'최근 {n}회',
                                   key=f'{prefix}_period')
     windows = st.multiselect('표시할 이동평균선', list(COLORS), default=[5, 20, 60, 120],
                              format_func=lambda n: f'{n}회선', key=f'{prefix}_windows')
-    appearance = cached_appearance(history, kind=kind, recent_rounds=period)
+    appearance = cached_appearance(history, kind=kind, recent_rounds=period or None)
     selected = appearance.loc[appearance['번호'].eq(number)]
     last = selected.iloc[-1]
     metrics = st.columns(4)
@@ -114,13 +114,13 @@ def _render_prizes(history):
     basis = controls[0].selectbox('금액 기준', ['total', 'per_game'],
                                  format_func=lambda value: '1등 총액 기준' if value == 'total' else '1게임당 금액 기준',
                                  key='number_trend_prize_basis')
-    period = controls[1].selectbox('집계 기간', [None, 120, 60],
-                                  format_func=lambda n: '전체' if n is None else f'최근 {n}회',
+    period = controls[1].selectbox('집계 기간', [0, 120, 60],
+                                  format_func=lambda n: '전체' if n == 0 else f'최근 {n}회',
                                   key='number_trend_prize_period')
     numbers = st.multiselect('비교할 번호', list(range(1, 46)), default=[1], max_selections=6,
                              key='number_trend_prize_numbers')
     end = int(history['회차'].max())
-    start = int(history['회차'].min()) if period is None else max(int(history['회차'].min()), end - period + 1)
+    start = int(history['회차'].min()) if period == 0 else max(int(history['회차'].min()), end - period + 1)
     result = cached_allocation(history, start=start, end=end, basis=basis)
     coverage = result['coverage']
     st.caption(f'{start}~{end}회 · 공시 당첨금 기준·세전 · 금액 표시는 반올림합니다.')

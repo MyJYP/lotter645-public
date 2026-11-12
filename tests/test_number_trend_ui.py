@@ -56,7 +56,10 @@ def test_prize_basis_period_comparison_and_empty_selection():
     total = app.metric[0].value
     app.selectbox(key='number_trend_prize_basis').set_value('per_game').run()
     assert not app.exception and app.metric[0].value != total
+    per_game_total = app.metric[0].value
     app.selectbox(key='number_trend_prize_period').set_value(60).run()
+    app.selectbox(key='number_trend_prize_period').set_value(0).run()
+    assert app.metric[0].value == per_game_total
     app.multiselect(key='number_trend_prize_numbers').set_value([1,38]).run()
     assert not app.exception
     assert len(app.get('plotly_chart')) == 1
@@ -81,7 +84,7 @@ def test_bonus_view_reuses_chart_and_exposes_followup_and_money():
     app = AppTest.from_string(SCRIPT, default_timeout=30).run()
     app.radio(key='number_trend_view').set_value('보너스 번호').run()
     app.selectbox(key='number_trend_bonus_number').set_value(32).run()
-    app.selectbox(key='number_trend_bonus_period').set_value(None).run()
+    app.selectbox(key='number_trend_bonus_period').set_value(0).run()
     assert not app.exception and not app.error
     assert any(metric.label=='선택 기간 보너스 출현' and metric.value=='23회' for metric in app.metric)
     assert any('다음 회차 본번호 등장' in item.value for item in app.markdown)
