@@ -63,3 +63,14 @@ def test_prize_basis_period_comparison_and_empty_selection():
     app.multiselect(key='number_trend_prize_numbers').set_value([]).run()
     assert not app.exception and not app.get('plotly_chart')
     assert any('번호를 선택' in item.value for item in app.info)
+
+
+
+def test_appearance_displays_difference_and_line_relationship():
+    app = AppTest.from_string(SCRIPT, default_timeout=30).run()
+    assert not app.exception
+    assert any('차이 -10%p' in item.value and '아래에 있음' in item.value for item in app.caption)
+    assert '5회 − 20회 (%p)' in app.dataframe[0].value.columns
+    app.selectbox(key='number_trend_main_number').set_value(2).run()
+    assert not app.exception
+    assert any('같음' in item.value and '차이 +0%p' in item.value for item in app.caption)

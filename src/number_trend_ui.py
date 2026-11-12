@@ -82,12 +82,21 @@ def _render_appearance(history, kind='main'):
                          yaxis2={'domain': [0, 0.07], 'visible': False, 'range': [-1, 1]},
                          legend={'orientation': 'h'}, hovermode='x unified')
     st.plotly_chart(figure, width='stretch', key=f'{prefix}_chart')
-    st.caption(f"{int(last['회차'])}회 기준 · {number}번 · {_cross_label(last['cross'])}")
+    difference = last['ma_5'] - last['ma_20']
+    if pd.isna(difference):
+        state = '5회·20회선 자료 부족'
+    else:
+        relation = '같음' if difference == 0 else ('위에 있음' if difference > 0 else '아래에 있음')
+        state = f'5회선이 20회선과 {relation}' if difference == 0 else f'5회선이 20회선 {relation}'
+        state += f' · 차이 {difference:+g}%p'
+    st.caption(f"{int(last['회차'])}회 기준 · {number}번 · {state} · {_cross_label(last['cross'])}")
     latest = appearance.loc[appearance['회차'].eq(appearance['회차'].max())].copy()
     latest['cross'] = latest['cross'].map(_cross_label)
-    latest = latest[['번호', 'ma_5', 'ma_20', 'ma_60', 'ma_120', 'cross']].rename(columns={
+    latest['difference'] = latest['ma_5'] - latest['ma_20']
+    latest = latest[['번호', 'ma_5', 'ma_20', 'ma_60', 'ma_120', 'difference', 'cross']].rename(columns={
         'ma_5': '5회 출현률 (%)', 'ma_20': '20회 출현률 (%)',
-        'ma_60': '60회 출현률 (%)', 'ma_120': '120회 출현률 (%)', 'cross': '이번 회차 교차'})
+        'ma_60': '60회 출현률 (%)', 'ma_120': '120회 출현률 (%)',
+        'difference': '5회 − 20회 (%p)', 'cross': '이번 회차 교차'})
     st.write('전체 번호 한눈에 보기')
     table_key = f'{prefix}_table'
     st.dataframe(latest, hide_index=True, width='stretch', key=table_key,
