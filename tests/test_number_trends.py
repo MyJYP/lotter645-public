@@ -620,3 +620,23 @@ def test_bonus_followup_empty_schema_and_future_range_invariance():
     empty = summarize_bonus(prepare_trend_data(pd.DataFrame(), pd.DataFrame()))
     assert empty['events'].dtypes.to_dict() == full['events'].dtypes.to_dict()
     assert empty['summary']['next_main_observed'].eq(0).all()
+
+
+
+def test_bonus_second_prize_totals_zero_games_and_exclusion_reasons():
+    frame = appearance_history(3, 'bonus', hits=[1,3])
+    prizes = pd.DataFrame({'회차':[1,2,3], '2등 당첨액': ['9007199254740993','invalid',7],
+                           '2등 당첨자수':[2,1,0]})
+    prepared = prepare_trend_data(frame,prizes)
+    result=summarize_bonus(prepared)
+    summary=result['summary'].set_index('번호')
+    assert summary.at[1,'second_prize_total']==9007199254740993*2
+    assert isinstance(summary.at[1,'second_prize_total'],int)
+    assert summary.at[1,'valid_prize_events']==2
+    assert summary.at[45,'excluded_prize_events']==1
+    events=result['events'].set_index('회차')
+    assert events.at[2,'second_exclusion_reason']=='2등 당첨액: 숫자 형식 오류'
+    assert events.at[3,'second_amount']==0
+    assert sum(summary['second_prize_total'])==sum(events['second_amount'].dropna())
+    limited=summarize_bonus(prepared,start=2,end=3)['summary'].set_index('번호')
+    assert limited.at[1,'second_prize_total']==0

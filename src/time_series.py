@@ -371,6 +371,23 @@ def summarize_bonus(history, start=None, end=None):
         hits * 100 / count if count else pd.NA
         for hits, count in zip(summary['next_main_hits'], summary['next_main_observed'])
     ], dtype=object)
+    financial_input = selected.copy()
+    for column in ('2등 당첨액', '2등 당첨자수'):
+        if column not in financial_input:
+            financial_input[column] = pd.NA
+    financial = prepare_prize_rounds(financial_input, rank=2).rename(columns={
+        column: f'second_{column}' for column in (
+            'per_game', 'winning_games', 'amount', 'exclusion_reason', 'amount_source')})
+    events = events.merge(financial, on='회차', how='left', validate='one_to_one')
+    second_totals, valid_events, excluded_events = [], [], []
+    for number in range(1, 46):
+        amounts = events.loc[events['번호'].eq(number), 'second_amount']
+        second_totals.append(sum(amounts.dropna()))
+        valid_events.append(int(amounts.notna().sum()))
+        excluded_events.append(int(amounts.isna().sum()))
+    summary['second_prize_total'] = pd.Series(second_totals, dtype=object)
+    summary['valid_prize_events'] = valid_events
+    summary['excluded_prize_events'] = excluded_events
     expected = end - start + 1 if start is not None and end is not None else 0
     return {
         'summary': summary,
@@ -379,7 +396,8 @@ def summarize_bonus(history, start=None, end=None):
                      'observed_rounds': len(selected), 'missing_rounds': expected - len(selected),
                      'valid_bonus_rounds': len(valid_bonus),
                      'missing_bonus_rounds': len(selected) - len(valid_bonus),
-                     'pending_next_main_events': int(summary['next_main_pending'].sum())},
+                     'pending_next_main_events': int(summary['next_main_pending'].sum()),
+                     'excluded_second_prize_events': sum(excluded_events)},
     }
 
 
