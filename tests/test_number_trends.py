@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from data_loader import LottoDataLoader
-from time_series import build_prize_allocation, build_appearance, prepare_prize_rounds, prepare_trend_data, summarize_trend_coverage, validate_trend_numbers
+from time_series import summarize_bonus, build_prize_allocation, build_appearance, prepare_prize_rounds, prepare_trend_data, summarize_trend_coverage, validate_trend_numbers
 
 
 def history():
@@ -561,3 +561,32 @@ def test_zero_winning_games_ignores_invalid_amount_but_preserves_prepared_reason
 def test_prize_validation_without_saved_reason_columns_still_reports_original_error():
     raw = pd.DataFrame({'회차': [101], '1등 당첨액': ['invalid'], '1등 당첨자수': [1]})
     assert prepare_prize_rounds(raw).at[0, 'exclusion_reason'] == '1등 당첨액: 숫자 형식 오류'
+
+
+
+def test_bonus_summary_uses_observed_denominators_and_complete_intervals():
+    frame = appearance_history(10, 'bonus', hits=[1, 3, 7, 9])
+    frame = frame[frame['회차'].ne(5)].copy()
+    frame.loc[frame['회차'].eq(6), '보너스번호'] = pd.NA
+    result = summarize_bonus(frame)
+    row = result['summary'].set_index('번호').loc[1]
+    assert row['bonus_count'] == 4 and row['bonus_rate'] == 50
+    assert row['mean_interval'] == 2 and row['valid_interval_count'] == 2
+    assert row['excluded_interval_count'] == 1
+    assert row['last_bonus_round'] == 9 and row['rounds_since_bonus'] == 1
+    assert result['coverage']['missing_rounds'] == result['coverage']['missing_bonus_rounds'] == 1
+    assert sum(result['summary']['bonus_count']) == 8
+    assert sum(result['summary']['main_count']) == 9 * 6
+
+
+def test_bonus_summary_empty_and_selected_period():
+    empty = summarize_bonus(prepare_trend_data(pd.DataFrame(), pd.DataFrame()))
+    assert len(empty['summary']) == 45 and empty['summary']['bonus_rate'].isna().all()
+    frame = appearance_history(12, 'bonus', hits=[1, 3, 9])
+    before = frame.copy(deep=True)
+    result = summarize_bonus(frame, start=5, end=10)
+    row = result['summary'].set_index('번호').loc[1]
+    assert row['bonus_count'] == 1 and row['last_bonus_round'] == 9
+    assert pd.isna(row['mean_interval'])
+    pd.testing.assert_frame_equal(frame, before)
+    pd.testing.assert_frame_equal(result['summary'],summarize_bonus(frame.iloc[::-1],5,10)['summary'])

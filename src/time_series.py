@@ -239,22 +239,26 @@ def prepare_prize_rounds(history, basis='total', rank=1):
     })
 
 
-def build_prize_allocation(history, start=None, end=None, basis='total'):
-    """Allocate selected first-prize amounts exactly, keeping a denominator of six."""
+def _resolve_round_bounds(history, start, end):
+    """Resolve optional inclusive round bounds on validated history."""
     for name, value in (('start', start), ('end', end)):
         if value is not None and (
                 isinstance(value, (bool, np.bool_)) or
                 not isinstance(value, Integral) or value <= 0):
             raise ValueError(f'{name}는 양의 정수 또는 None이어야 합니다.')
+    if not history.empty:
+        start = int(history['회차'].min()) if start is None else int(start)
+        end = int(history['회차'].max()) if end is None else int(end)
     if start is not None and end is not None and start > end:
         raise ValueError('start는 end 이하이어야 합니다.')
+    return start, end
+
+
+def build_prize_allocation(history, start=None, end=None, basis='total'):
+    """Allocate selected first-prize amounts exactly, keeping a denominator of six."""
     observed = validate_trend_numbers(history)
+    start, end = _resolve_round_bounds(observed, start, end)
     prizes = prepare_prize_rounds(observed, basis=basis)
-    if not observed.empty:
-        start = int(observed['회차'].min()) if start is None else int(start)
-        end = int(observed['회차'].max()) if end is None else int(end)
-    if start is not None and end is not None and start > end:
-        raise ValueError('조회 범위가 보유 회차와 겹치지 않습니다. start와 end를 지정해 주세요.')
     selected_rounds = range(start, end + 1) if start is not None and end is not None else range(0)
     number_lookup = observed.set_index('회차')['당첨번호'].to_dict()
     amount_lookup = prizes.set_index('회차')['amount'].to_dict()
@@ -309,6 +313,53 @@ def build_prize_allocation(history, start=None, end=None, basis='total'):
     }
     return {'series': series, 'summary': summary,
             'rounds': details.reset_index(), 'coverage': coverage}
+
+
+def summarize_bonus(history, start=None, end=None):
+    """Summarize bonus observations with explicit valid-data denominators."""
+    observed = validate_trend_numbers(history)
+    start, end = _resolve_round_bounds(observed, start, end)
+    selected = observed
+    if start is not None:
+        selected = selected.loc[selected['회차'].ge(start)]
+    if end is not None:
+        selected = selected.loc[selected['회차'].le(end)]
+    valid_bonus = selected.loc[selected['보너스번호'].notna()]
+    known_rounds = set(valid_bonus['회차'])
+    rows = []
+    for number in range(1, 46):
+        appearances = valid_bonus.loc[valid_bonus['보너스번호'].eq(number), '회차'].tolist()
+        intervals = []
+        excluded_intervals = 0
+        for before, after in zip(appearances, appearances[1:]):
+            if all(draw in known_rounds for draw in range(before, after + 1)):
+                intervals.append(after - before)
+            else:
+                excluded_intervals += 1
+        main_count = sum(number in numbers for numbers in selected['당첨번호'])
+        rows.append((number, len(appearances),
+                     len(appearances) * 100 / len(valid_bonus) if len(valid_bonus) else pd.NA,
+                     main_count, main_count * 100 / len(selected) if len(selected) else pd.NA,
+                     int(appearances[-1]) if appearances else pd.NA,
+                     int(end - appearances[-1]) if appearances else pd.NA,
+                     sum(intervals) / len(intervals) if intervals else pd.NA,
+                     len(intervals), excluded_intervals))
+    summary = pd.DataFrame(rows, columns=[
+        '번호', 'bonus_count', 'bonus_rate', 'main_count', 'main_rate',
+        'last_bonus_round', 'rounds_since_bonus', 'mean_interval',
+        'valid_interval_count', 'excluded_interval_count',
+    ], dtype=object)
+    summary = summary.astype({column: 'int64' for column in [
+        '번호', 'bonus_count', 'main_count', 'valid_interval_count', 'excluded_interval_count']})
+    expected = end - start + 1 if start is not None and end is not None else 0
+    return {
+        'summary': summary,
+        'events': valid_bonus[['회차', '보너스번호']].rename(columns={'보너스번호': '번호'}).reset_index(drop=True),
+        'coverage': {'start_round': start, 'end_round': end,
+                     'observed_rounds': len(selected), 'missing_rounds': expected - len(selected),
+                     'valid_bonus_rounds': len(valid_bonus),
+                     'missing_bonus_rounds': len(selected) - len(valid_bonus)},
+    }
 
 
 class TimeSeriesAnalysis:
