@@ -23,3 +23,26 @@ def test_trend_entry_data_range_and_view_selection():
         app.radio(key='number_trend_view').set_value(view).run()
         assert not app.exception
     assert any('동행복권' in item.value for item in app.markdown)
+
+
+
+def test_appearance_number_period_windows_and_table_selection():
+    app = AppTest.from_string(SCRIPT, default_timeout=30).run()
+    assert not app.exception
+    app.selectbox(key='number_trend_main_number').set_value(35).run()
+    app.selectbox(key='number_trend_main_period').set_value(50).run()
+    app.multiselect(key='number_trend_main_windows').set_value([10,120]).run()
+    assert not app.exception
+    assert len(app.get('plotly_chart')) == 1
+    assert any('35번' in caption.value for caption in app.caption)
+    # Dataframe selection callbacks execute before the next widget render.
+    app.session_state['number_trend_main_table']={'selection':{'rows':[6]}}
+    callback_script = SCRIPT.replace('render_number_trends(loader)',
+        "from number_trend_ui import _apply_number_selection\n"
+        "st = __import__('streamlit')\n"
+        "st.session_state['selected_table']={'selection':{'rows':[6]}}\n"
+        "_apply_number_selection('selected_table','number_trend_main_number',list(range(1,46)))\n"
+        "render_number_trends(loader)")
+    selected = AppTest.from_string(callback_script, default_timeout=30).run()
+    assert not selected.exception
+    assert selected.selectbox(key='number_trend_main_number').value == 7
