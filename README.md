@@ -29,3 +29,5 @@ python -m pytest -q tests
 ```
 
 추출 조건과 점수 계산 방식은 [패턴 선호도 설명](docs/PATTERN_PREFERENCE.md)에서 확인할 수 있습니다.
+
+추가 예정인 번호별 5·10·20·60·120회 이동평균 화면은 [재미로 보는 번호 차트 기획서](docs/NUMBER_TREND_PLAN.md)에 정리했습니다. [인터랙티브 화면 구성안](docs/previews/number-trend.html)에서 번호와 기간을 바꿔볼 수 있습니다.

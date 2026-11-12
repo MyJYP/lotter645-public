@@ -4,6 +4,311 @@
 import pandas as pd
 import numpy as np
 from collections import Counter, defaultdict
+from numbers import Integral, Real
+from decimal import Decimal, InvalidOperation
+from fractions import Fraction
+
+from data_loader import normalize_draw_history
+
+
+def validate_trend_numbers(frame):
+    """Validate number history and return an independent copy oldest first."""
+    required = {'회차', '당첨번호', '보너스번호'}
+    if not required.issubset(frame.columns):
+        raise ValueError('회차·당첨번호·보너스번호 컬럼이 필요합니다.')
+    if frame['회차'].map(lambda value: isinstance(value, (bool, np.bool_))).any():
+        raise ValueError('회차는 양의 정수여야 합니다.')
+    try:
+        result = normalize_draw_history(frame)
+    except TypeError as error:
+        raise ValueError('본번호는 1~45의 서로 다른 정수 6개여야 합니다.') from error
+
+    bonuses = []
+    for numbers, bonus in zip(result['당첨번호'], result['보너스번호']):
+        if bonus is None or bonus is pd.NA:
+            bonuses.append(pd.NA)
+            continue
+        if not isinstance(bonus, Real) or isinstance(bonus, (bool, np.bool_)):
+            raise ValueError('보너스번호는 1~45의 정수여야 합니다.')
+        if pd.isna(bonus):
+            bonuses.append(pd.NA)
+            continue
+        if not np.isfinite(bonus) or bonus % 1 or not 1 <= bonus <= 45:
+            raise ValueError('보너스번호는 1~45의 정수여야 합니다.')
+        if bonus in numbers:
+            raise ValueError('보너스번호는 본번호와 중복될 수 없습니다.')
+        bonuses.append(int(bonus))
+
+    result['보너스번호'] = pd.array(bonuses, dtype='Int64')
+    return result.sort_values('회차').reset_index(drop=True)
+
+
+def _parse_prize_integer(value):
+    """Return an exact nonnegative integer and its exclusion reason."""
+    if value is None or value is pd.NA:
+        return pd.NA, '자료 없음'
+    if isinstance(value, (bool, np.bool_)):
+        return pd.NA, '비음수 정수 필요'
+    try:
+        number = Decimal(str(value).replace(',', '').strip())
+    except InvalidOperation:
+        return pd.NA, '숫자 형식 오류'
+    if number.is_nan():
+        return pd.NA, '자료 없음'
+    if not number.is_finite() or number < 0 or number != number.to_integral_value():
+        return pd.NA, '비음수 정수 필요'
+    return int(number), ''
+
+
+def prepare_trend_data(numbers_df, prizes_df):
+    """Join validated number history to exact prize values by draw number."""
+    # A completely empty input is valid; missing columns on populated input are not.
+    if numbers_df.empty and len(numbers_df.columns) == 0:
+        numbers_df = numbers_df.reindex(columns=['회차', '당첨번호', '보너스번호'])
+    if prizes_df.empty and len(prizes_df.columns) == 0:
+        prizes_df = prizes_df.reindex(columns=['회차'])
+    history = validate_trend_numbers(numbers_df)
+    history['일자'] = pd.to_datetime(
+        history['일자'] if '일자' in history else pd.Series(pd.NaT, index=history.index),
+        errors='coerce', format='mixed',
+    ).astype('datetime64[ns]')
+    history = history[['회차', '일자', '당첨번호', '보너스번호']]
+    history['당첨번호'] = history['당첨번호'].astype(object)
+    if '회차' not in prizes_df:
+        raise ValueError('당첨금 자료에 회차 컬럼이 필요합니다.')
+    if prizes_df['회차'].map(lambda value: isinstance(value, (bool, np.bool_))).any():
+        raise ValueError('회차는 양의 정수여야 합니다.')
+    columns = ['1등 당첨액', '1등 당첨자수', '2등 당첨액', '2등 당첨자수']
+    prizes = normalize_draw_history(prizes_df.reindex(columns=['회차', *columns]))
+    # Keep Python integers as objects so missing rows cannot coerce them to float.
+    # The right-hand values must also be objects before a missing-row join.
+    for column in columns:
+        parsed = [_parse_prize_integer(value) for value in prizes[column]]
+        prizes[column] = pd.Series([value for value, _ in parsed], dtype=object)
+        prizes[f'{column} 제외 사유'] = [reason for _, reason in parsed]
+    history = history.drop(columns=columns, errors='ignore')
+    result = history.merge(prizes, on='회차', how='left', validate='one_to_one', sort=False)
+    for column in columns:
+        result[f'{column} 제외 사유'] = result[f'{column} 제외 사유'].astype(object).fillna('회차 금액 자료 없음')
+        result[column] = result[column].where(result[column].notna(), pd.NA)
+    # Keep one schema, including dtypes, for empty and populated histories.
+    for column in columns:
+        result[column] = result[column].astype(object)
+        result[f'{column} 제외 사유'] = result[f'{column} 제외 사유'].astype(object)
+    return result[['회차', '일자', '당첨번호', '보너스번호', *columns,
+                   *[f'{column} 제외 사유' for column in columns]]].reset_index(drop=True)
+
+
+def summarize_trend_coverage(history):
+    """Describe prepared observed history without filling missing draws with zeros."""
+    if history.empty:
+        return {
+            'start_round': None, 'end_round': None, 'last_draw_date': pd.NaT,
+            'observed_rounds': 0, 'missing_rounds': 0, 'missing_bonus_rounds': 0,
+        }
+    start = int(history['회차'].min())
+    end = int(history['회차'].max())
+    latest = history.loc[history['회차'].eq(end)].iloc[0]
+    return {
+        'start_round': start,
+        'end_round': end,
+        'last_draw_date': latest['일자'],
+        'observed_rounds': len(history),
+        'missing_rounds': end - start + 1 - len(history),
+        'missing_bonus_rounds': int(history['보너스번호'].isna().sum()),
+    }
+
+
+def build_appearance(history, kind='main', recent_rounds=None):
+    """Return full-history appearance indicators and complete-window rates.
+
+    Missing draws (and missing bonus observations in bonus mode) invalidate
+    every rolling window containing them. Rates are percentages, not forecasts.
+    Cross events use consecutive valid 5/20-round windows. Optional range
+    selection happens after calculation, retaining earlier warm-up history.
+    """
+    if kind not in ('main', 'bonus'):
+        raise ValueError('kind는 main 또는 bonus여야 합니다.')
+    if recent_rounds is not None and (
+            isinstance(recent_rounds, (bool, np.bool_)) or
+            not isinstance(recent_rounds, Integral) or recent_rounds <= 0):
+        raise ValueError('recent_rounds는 양의 정수 또는 None이어야 합니다.')
+    windows = (5, 10, 20, 60, 120)
+    result = pd.DataFrame({
+        '회차': pd.Series(dtype='int64'),
+        '번호': pd.Series(dtype='int64'),
+        'appeared': pd.Series(dtype='float64'),
+        **{f'count_{n}': pd.Series(dtype='float64') for n in windows},
+        **{f'ma_{n}': pd.Series(dtype='float64') for n in windows},
+        'cross': pd.Series(dtype='string'),
+    })
+    if history.empty:
+        return result
+
+    observed = validate_trend_numbers(history)
+    start = int(observed['회차'].iloc[0])
+    end = int(observed['회차'].iloc[-1])
+    rounds = np.arange(start, end + 1, dtype=np.int64)
+    matrix = np.full((len(rounds), 45), np.nan)
+    for draw, numbers, bonus in zip(
+            observed['회차'], observed['당첨번호'], observed['보너스번호']):
+        if kind == 'bonus' and pd.isna(bonus):
+            continue
+        row = int(draw) - start
+        matrix[row, :] = 0
+        selected = numbers if kind == 'main' else [int(bonus)]
+        matrix[row, np.asarray(selected, dtype=int) - 1] = 1
+
+    result = pd.DataFrame({
+        '회차': np.repeat(rounds, 45),
+        '번호': np.tile(np.arange(1, 46, dtype=np.int64), len(rounds)),
+        'appeared': matrix.ravel(),
+    })
+    indicators = pd.DataFrame(matrix)
+    for n in windows:
+        counts = indicators.rolling(n, min_periods=n).sum().to_numpy().ravel()
+        result[f'count_{n}'] = counts
+        result[f'ma_{n}'] = counts * 100 / n
+    difference = 4 * result['count_5'] - result['count_20']
+    previous = difference.groupby(result['번호']).shift()
+    valid = difference.notna() & previous.notna()
+    result['cross'] = pd.Series(pd.NA, index=result.index, dtype='string')
+    result.loc[valid, 'cross'] = 'none'
+    result.loc[valid & previous.le(0) & difference.gt(0), 'cross'] = 'up'
+    result.loc[valid & previous.ge(0) & difference.lt(0), 'cross'] = 'down'
+    if recent_rounds is not None:
+        result = result.loc[result['회차'].ge(max(start, end - int(recent_rounds) + 1))]
+    return result[['회차', '번호', 'appeared',
+                   *[f'count_{n}' for n in windows],
+                   *[f'ma_{n}' for n in windows], 'cross']].reset_index(drop=True)
+
+
+def prepare_prize_rounds(history, basis='total', rank=1):
+    """Resolve exact per-draw amounts from prepared history for ranks 1 or 2."""
+    if basis not in ('total', 'per_game'):
+        raise ValueError('basis는 total 또는 per_game이어야 합니다.')
+    if isinstance(rank, (bool, np.bool_)) or not isinstance(rank, Integral) or rank not in (1, 2):
+        raise ValueError('rank는 1 또는 2여야 합니다.')
+    amount_column = f'{rank}등 당첨액'
+    games_column = f'{rank}등 당첨자수'
+    required = ['회차', amount_column, games_column]
+    if not set(required).issubset(history.columns):
+        raise ValueError('준비된 회차·당첨금·당첨게임 수 컬럼이 필요합니다.')
+    reason_columns = [f'{amount_column} 제외 사유', f'{games_column} 제외 사유']
+    rounds = normalize_draw_history(
+        history.reindex(columns=[*required, *reason_columns]),
+    ).sort_values('회차').reset_index(drop=True)
+    per_game_values, game_counts, amounts, reasons, sources = [], [], [], [], []
+    for raw_amount, raw_games, saved_amount_reason, saved_games_reason in zip(
+            rounds[amount_column], rounds[games_column],
+            rounds[reason_columns[0]], rounds[reason_columns[1]]):
+        per_game, amount_reason = _parse_prize_integer(raw_amount)
+        games, games_reason = _parse_prize_integer(raw_games)
+        if isinstance(saved_amount_reason, str) and saved_amount_reason:
+            amount_reason = saved_amount_reason
+        if isinstance(saved_games_reason, str) and saved_games_reason:
+            games_reason = saved_games_reason
+        amount = pd.NA
+        reason = ''
+        source = '검증 제외'
+        if games_reason:
+            reason = f'{games_column}: {games_reason}'
+        elif games == 0:
+            amount = 0
+            source = '당첨게임 없음'
+        elif amount_reason:
+            reason = f'{amount_column}: {amount_reason}'
+        elif basis == 'total':
+            amount = per_game * games
+            source = '게임당 당첨금 × 당첨게임 수'
+        else:
+            amount = per_game
+            source = '공시 게임당 당첨금'
+        per_game_values.append(per_game)
+        game_counts.append(games)
+        amounts.append(amount)
+        reasons.append(reason)
+        sources.append(source)
+    return pd.DataFrame({
+        '회차': rounds['회차'],
+        'per_game': pd.Series(per_game_values, dtype=object),
+        'winning_games': pd.Series(game_counts, dtype=object),
+        'amount': pd.Series(amounts, dtype=object),
+        'exclusion_reason': pd.Series(reasons, dtype=object),
+        'amount_source': pd.Series(sources, dtype=object),
+    })
+
+
+def build_prize_allocation(history, start=None, end=None, basis='total'):
+    """Allocate selected first-prize amounts exactly, keeping a denominator of six."""
+    for name, value in (('start', start), ('end', end)):
+        if value is not None and (
+                isinstance(value, (bool, np.bool_)) or
+                not isinstance(value, Integral) or value <= 0):
+            raise ValueError(f'{name}는 양의 정수 또는 None이어야 합니다.')
+    if start is not None and end is not None and start > end:
+        raise ValueError('start는 end 이하이어야 합니다.')
+    observed = validate_trend_numbers(history)
+    prizes = prepare_prize_rounds(observed, basis=basis)
+    if not observed.empty:
+        start = int(observed['회차'].min()) if start is None else int(start)
+        end = int(observed['회차'].max()) if end is None else int(end)
+    if start is not None and end is not None and start > end:
+        raise ValueError('조회 범위가 보유 회차와 겹치지 않습니다. start와 end를 지정해 주세요.')
+    selected_rounds = range(start, end + 1) if start is not None and end is not None else range(0)
+    number_lookup = observed.set_index('회차')['당첨번호'].to_dict()
+    amount_lookup = prizes.set_index('회차')['amount'].to_dict()
+    totals = [0] * 46
+    appearances = [0] * 46
+    valid_appearances = [0] * 46
+    rows = []
+    for draw in selected_rounds:
+        numbers = set(number_lookup.get(draw, ()))
+        amount = amount_lookup.get(draw, pd.NA)
+        valid = not pd.isna(amount)
+        for number in range(1, 46):
+            appeared = number in numbers
+            allocation = int(amount) * int(appeared) if valid else pd.NA
+            appearances[number] += int(appeared)
+            valid_appearances[number] += int(valid and appeared)
+            if valid:
+                totals[number] += allocation
+            rows.append((draw, number, allocation, totals[number]))
+    series = pd.DataFrame(rows, columns=[
+        '회차', '번호', 'allocation_numerator', 'cumulative_numerator',
+    ], dtype=object)
+    series = series.astype({'회차': 'int64', '번호': 'int64'})
+    summary = pd.DataFrame([
+        (number, totals[number], appearances[number], valid_appearances[number],
+         Fraction(totals[number], 6 * valid_appearances[number])
+         if valid_appearances[number] else pd.NA)
+        for number in range(1, 46)
+    ], columns=['번호', 'cumulative_numerator', 'appearance_count',
+                'valid_appearance_count', 'average_allocation'], dtype=object)
+    summary = summary.astype({'번호': 'int64', 'appearance_count': 'int64',
+                              'valid_appearance_count': 'int64'})
+    details = prizes.merge(
+        observed[['회차', '일자', '당첨번호']], on='회차', validate='one_to_one',
+    ).set_index('회차').reindex(selected_rounds)
+    details.index.name = '회차'
+    observed_mask = details.index.isin(observed['회차'])
+    details['exclusion_reason'] = details['exclusion_reason'].fillna('관측 회차 없음')
+    details['amount_source'] = details['amount_source'].fillna('관측 회차 없음')
+    for column in ('per_game', 'winning_games', 'amount', '당첨번호'):
+        details[column] = details[column].where(details[column].notna(), pd.NA)
+    valid_mask = details['amount'].notna()
+    coverage = {
+        'start_round': start,
+        'end_round': end,
+        'basis': basis,
+        'observed_rounds': int(observed_mask.sum()),
+        'missing_rounds': len(selected_rounds) - int(observed_mask.sum()),
+        'valid_prize_rounds': int(valid_mask.sum()),
+        'excluded_prize_rounds': int((observed_mask & ~valid_mask).sum()),
+        'total_amount': sum(details.loc[valid_mask, 'amount']),
+    }
+    return {'series': series, 'summary': summary,
+            'rounds': details.reset_index(), 'coverage': coverage}
 
 
 class TimeSeriesAnalysis:
