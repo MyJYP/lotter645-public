@@ -37,8 +37,23 @@ def test_repeated_clicks_settings_history_and_isolation():
 
 
 def test_ui_shows_relaxation_and_invalid_settings():
-    # One observed row makes most pairs unobserved, forcing the ordered fallback.
-    script = SCRIPT.replace('render_pattern_preference(loader.numbers_df)', 'render_pattern_preference(loader.numbers_df.head(1))')
+    # A disjoint candidate deterministically requires the pair-filter fallback.
+    render_script = '''
+from unittest.mock import patch
+from pattern_preference import PatternPreferenceEngine
+observed = loader.numbers_df.head(1)
+winning = set(observed.iloc[0]['당첨번호'])
+candidate = tuple(number for number in range(1, 46) if number not in winning)[:6]
+original_draw = PatternPreferenceEngine.draw
+
+def draw_with_known_candidate(self, *args, **kwargs):
+    kwargs['candidates'] = [candidate]
+    return original_draw(self, *args, **kwargs)
+
+with patch.object(PatternPreferenceEngine, 'draw', draw_with_known_candidate):
+    render_pattern_preference(observed)
+'''
+    script = SCRIPT.replace('render_pattern_preference(loader.numbers_df)', render_script)
     app = AppTest.from_string(script, default_timeout=30).run()
     app.button(key='pattern_generate').click().run()
     assert not app.exception
