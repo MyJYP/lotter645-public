@@ -74,3 +74,16 @@ def test_appearance_displays_difference_and_line_relationship():
     app.selectbox(key='number_trend_main_number').set_value(2).run()
     assert not app.exception
     assert any('같음' in item.value and '차이 +0%p' in item.value for item in app.caption)
+
+
+
+def test_bonus_view_reuses_chart_and_exposes_followup_and_money():
+    app = AppTest.from_string(SCRIPT, default_timeout=30).run()
+    app.radio(key='number_trend_view').set_value('보너스 번호').run()
+    app.selectbox(key='number_trend_bonus_number').set_value(32).run()
+    app.selectbox(key='number_trend_bonus_period').set_value(None).run()
+    assert not app.exception and not app.error
+    assert any(metric.label=='선택 기간 보너스 출현' and metric.value=='23회' for metric in app.metric)
+    assert any('다음 회차 본번호 등장' in item.value for item in app.markdown)
+    assert any('2등 총액 합계' in metric.label for metric in app.metric)
+    assert len(app.get('plotly_chart'))==1

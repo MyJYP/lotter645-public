@@ -164,6 +164,43 @@ def _render_prizes(history):
                                           'amount_source': '산출 근거'})
         st.dataframe(details, hide_index=True, width='stretch')
 
+
+def _render_bonus(history):
+    st.write('아차! 보너스 번호 탐구')
+    st.caption('2등은 본번호 5개와 보너스 번호를 맞힌 경우입니다.')
+    number, start, end = _render_appearance(history, kind='bonus')
+    result = cached_bonus(history, start=start, end=end)
+    row = result['summary'].set_index('번호').loc[number]
+    metrics = st.columns(3)
+    metrics[0].metric('선택 기간 보너스 출현', f"{row['bonus_count']}회")
+    metrics[1].metric('마지막 보너스 출현', '기록 없음' if pd.isna(row['last_bonus_round']) else f"{row['last_bonus_round']}회")
+    metrics[2].metric('경과 회차', '기록 없음' if pd.isna(row['rounds_since_bonus']) else f"{row['rounds_since_bonus']}회")
+    interval = '자료 부족' if pd.isna(row['mean_interval']) else f"{row['mean_interval']:g}회"
+    st.write(f"완전 관측 구간의 평균 출현 간격 {interval} · 유효 간격 {row['valid_interval_count']}건 · 제외 간격 {row['excluded_interval_count']}건")
+    st.write(f"다음 회차 본번호 등장 {row['next_main_hits']}/{row['next_main_observed']}건 · 관측 미완료 {row['next_main_pending']}건")
+    value = '자료 없음' if not row['valid_prize_events'] else f"{_won_to_eok(row['second_prize_total']):,.2f}억 원"
+    st.metric('보너스 등장 회차의 2등 총액 합계', value)
+    st.caption(f"공시 당첨금 기준·세전 · 금액 유효 {row['valid_prize_events']}회 · 금액 제외 {row['excluded_prize_events']}회")
+    st.write('번호별 보너스 기록')
+    summary = result['summary'].sort_values('bonus_count', ascending=False, kind='stable')
+    display = summary[['번호', 'bonus_count', 'bonus_rate', 'main_count', 'main_rate',
+                       'last_bonus_round', 'rounds_since_bonus', 'mean_interval']].rename(columns={
+        'bonus_count': '보너스 출현', 'bonus_rate': '보너스 출현률 (%)',
+        'main_count': '본번호 출현', 'main_rate': '본번호 출현률 (%)',
+        'last_bonus_round': '마지막 보너스 회차', 'rounds_since_bonus': '경과 회차',
+        'mean_interval': '평균 간격 (회)'})
+    st.dataframe(display, hide_index=True, width='stretch')
+    coverage = result['coverage']
+    st.caption(f"보너스 관측 {coverage['valid_bonus_rounds']}회 · 본번호 관측 {coverage['observed_rounds']}회 · "
+               f"미관측 회차 {coverage['missing_rounds']}건 · 보너스 결측 {coverage['missing_bonus_rounds']}건")
+    with st.expander('보너스 등장 회차·2등 금액·후속 기록'):
+        events = result['events'].loc[result['events']['번호'].eq(number)].rename(columns={
+            'next_round': '다음 회차', 'next_main_observed': '다음 회차 관측',
+            'next_main_hit': '다음 회차 본번호 등장', 'second_per_game': '2등 게임당 금액 (원)',
+            'second_winning_games': '2등 당첨게임 수', 'second_amount': '2등 총액 (원)',
+            'second_exclusion_reason': '금액 제외 사유', 'second_amount_source': '금액 산출 근거'})
+        st.dataframe(events, hide_index=True, width='stretch')
+
 def render_number_trends(loader):
     st.subheader('재미로 보는 번호 차트')
     try:
@@ -188,4 +225,6 @@ def render_number_trends(loader):
         _render_appearance(history)
     elif view == '당첨금 배분':
         _render_prizes(history)
+    else:
+        _render_bonus(history)
     _sources()
