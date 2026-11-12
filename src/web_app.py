@@ -18,6 +18,7 @@ import time
 # 모듈 import를 위한 경로 설정
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+from number_trend_ui import render_number_trends
 from pattern_preference_ui import render_pattern_preference
 from data_loader import LottoDataLoader
 from basic_stats import BasicStats
@@ -422,7 +423,10 @@ def data_exploration_page(loader):
     inject_custom_css()
     st.title("📊 데이터 탐색")
 
-    tab1, tab2, tab3 = st.tabs(["기본 통계", "시계열 분석", "패턴 분석"])
+    tab1, tab2, tab3, tab4 = st.tabs(["기본 통계", "시계열 분석", "패턴 분석", "재미로 보는 번호 차트"])
+
+    with tab4:
+        render_number_trends(loader)
 
     with tab1:
         st.subheader("📈 번호별 출현 빈도")
