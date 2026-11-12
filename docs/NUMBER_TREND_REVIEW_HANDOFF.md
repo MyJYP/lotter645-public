@@ -2,6 +2,8 @@
 
 ## 최신 재검증 요청 — T14 F01
 
+수정 커밋 SHA는 `e7c5aaf5432d79a1f385eaa4446968fffd6b1486`이다. 해당 SHA를 지정해 MAC23 스레드에 자동 전송했으나 `already has an active writer (code -32600)`로 거부됐다. 문서 기반 인계와 재검증 요청은 준비됐으며 전송은 대기 상태다.
+
 기준 커밋은 `8fe3a1b`이고 별도 수정 커밋 제목은 `Fix T14 F01: label prize chart and table with selected amount basis`다. 로컬 v6.2.30이며 금액 기준 전환 시 차트·표 제목이 함께 바뀌도록 수정했다. 변경은 `src/number_trend_ui.py`, `tests/test_number_trend_ui.py`, `VERSION`, T13~T17 리뷰·리뷰 목록·작업 문서다. UI 10개·전체 185개 테스트 통과. 알려진 신규 미해결 실행 오류는 현재 테스트에서 발견하지 못했다. T14 F01의 MAC23 독립 재검증이 남아 있다.
 
 요청한 패치 `/private/tmp/mac23-review-t13-t17-791841e.patch`와 기존 원본 worktree 파일은 현재 없어 원문 적용을 수행하지 못했다. 대신 사용자 전달 결과를 기존 리뷰 문서에 MAC23 출처로 추가했다. 이전 독립 리뷰 내용은 보존했다.
