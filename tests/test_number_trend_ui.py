@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 from streamlit.testing.v1 import AppTest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -126,3 +127,20 @@ def test_view_settings_are_isolated_between_sessions():
     second=AppTest.from_string(SCRIPT,default_timeout=30).run()
     assert first.selectbox(key='number_trend_main_number').value==35
     assert second.selectbox(key='number_trend_main_number').value==1
+
+
+
+def test_prize_chart_and_table_titles_follow_basis_in_both_directions():
+    app = AppTest.from_string(SCRIPT, default_timeout=30).run()
+    app.radio(key='number_trend_view').set_value('당첨금 배분').run()
+    for basis, label in [('total', '1등 총액 기준'), ('per_game', '1게임당 금액 기준'),
+                         ('total', '1등 총액 기준')]:
+        app.selectbox(key='number_trend_prize_basis').set_value(basis).run()
+        assert not app.exception
+        chart = json.loads(app.get('plotly_chart')[0].proto.spec)
+        assert chart['layout']['title']['text'] == f'번호별 누적 배분액 · {label}'
+        assert any(item.value == f'번호별 당첨금 배분 누계 · {label}' for item in app.markdown)
+    app.multiselect(key='number_trend_prize_numbers').set_value([]).run()
+    app.selectbox(key='number_trend_prize_basis').set_value('per_game').run()
+    assert not app.exception
+    assert any(item.value == '번호별 당첨금 배분 누계 · 1게임당 금액 기준' for item in app.markdown)

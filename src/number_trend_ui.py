@@ -115,6 +115,7 @@ def _render_prizes(history):
     basis = controls[0].selectbox('금액 기준', ['total', 'per_game'],
                                  format_func=lambda value: '1등 총액 기준' if value == 'total' else '1게임당 금액 기준',
                                  key='number_trend_prize_basis')
+    basis_label = '1등 총액 기준' if basis == 'total' else '1게임당 금액 기준'
     period = controls[1].selectbox('집계 기간', [0, 120, 60],
                                   format_func=lambda n: '전체' if n == 0 else f'최근 {n}회',
                                   key='number_trend_prize_period')
@@ -143,7 +144,8 @@ def _render_prizes(history):
         figure.add_trace(go.Scatter(x=series['회차'], y=values, mode='lines',
                                    name=f'{number}번', connectgaps=False))
     if numbers:
-        figure.update_layout(height=360, xaxis_title='회차', yaxis_title='누적 배분액 (억 원)',
+        figure.update_layout(title=f'번호별 누적 배분액 · {basis_label}',
+                             height=360, xaxis_title='회차', yaxis_title='누적 배분액 (억 원)',
                              hovermode='x unified', legend={'orientation': 'h'})
         st.plotly_chart(figure, width='stretch', key='number_trend_prize_chart')
     else:
@@ -154,7 +156,7 @@ def _render_prizes(history):
     display = summary[['번호', '배분 누계 (억 원)', 'appearance_count',
                        'valid_appearance_count', '출현 회당 평균 (억 원)']].rename(columns={
         'appearance_count': '본번호 출현 횟수', 'valid_appearance_count': '금액 유효 출현 횟수'})
-    st.write('번호별 당첨금 배분 누계')
+    st.write(f'번호별 당첨금 배분 누계 · {basis_label}')
     st.dataframe(display, hide_index=True, width='stretch', key='number_trend_prize_table')
     with st.expander('회차별 금액·제외 사유'):
         details = result['rounds'].copy()
