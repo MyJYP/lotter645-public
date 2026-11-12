@@ -351,14 +351,35 @@ def summarize_bonus(history, start=None, end=None):
     ], dtype=object)
     summary = summary.astype({column: 'int64' for column in [
         '번호', 'bonus_count', 'main_count', 'valid_interval_count', 'excluded_interval_count']})
+    events = valid_bonus[['회차', '보너스번호']].rename(columns={'보너스번호': '번호'}).reset_index(drop=True)
+    main_lookup = selected.set_index('회차')['당첨번호'].to_dict()
+    next_observed, next_hits = [], []
+    for draw, number in zip(events['회차'], events['번호']):
+        next_numbers = main_lookup.get(int(draw) + 1)
+        available = next_numbers is not None
+        next_observed.append(available)
+        next_hits.append(int(number) in next_numbers if available else pd.NA)
+    events['next_round'] = events['회차'] + 1
+    events['next_main_observed'] = pd.Series(next_observed, dtype=bool)
+    events['next_main_hit'] = pd.Series(next_hits, dtype='boolean')
+    for column in ('next_main_observed', 'next_main_hit'):
+        counts = events.groupby('번호')[column].sum()
+        target = 'next_main_hits' if column == 'next_main_hit' else 'next_main_observed'
+        summary[target] = summary['번호'].map(counts).fillna(0).astype('int64')
+    summary['next_main_pending'] = summary['bonus_count'] - summary['next_main_observed']
+    summary['next_main_rate'] = pd.Series([
+        hits * 100 / count if count else pd.NA
+        for hits, count in zip(summary['next_main_hits'], summary['next_main_observed'])
+    ], dtype=object)
     expected = end - start + 1 if start is not None and end is not None else 0
     return {
         'summary': summary,
-        'events': valid_bonus[['회차', '보너스번호']].rename(columns={'보너스번호': '번호'}).reset_index(drop=True),
+        'events': events,
         'coverage': {'start_round': start, 'end_round': end,
                      'observed_rounds': len(selected), 'missing_rounds': expected - len(selected),
                      'valid_bonus_rounds': len(valid_bonus),
-                     'missing_bonus_rounds': len(selected) - len(valid_bonus)},
+                     'missing_bonus_rounds': len(selected) - len(valid_bonus),
+                     'pending_next_main_events': int(summary['next_main_pending'].sum())},
     }
 
 

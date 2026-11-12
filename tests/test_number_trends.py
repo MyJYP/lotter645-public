@@ -590,3 +590,33 @@ def test_bonus_summary_empty_and_selected_period():
     assert pd.isna(row['mean_interval'])
     pd.testing.assert_frame_equal(frame, before)
     pd.testing.assert_frame_equal(result['summary'],summarize_bonus(frame.iloc[::-1],5,10)['summary'])
+
+
+
+def test_bonus_followups_use_actual_next_round_and_selected_range():
+    frame = appearance_history(6, 'bonus', hits=[1, 3, 5, 6])
+    frame.at[1, '당첨번호'] = [1, 2, 3, 4, 5, 6]
+    # Bonus 1 at round 6 cannot coexist with main 1; use a hit only after round 1.
+    frame = frame[frame['회차'].ne(4)]
+    result = summarize_bonus(frame)
+    row = result['summary'].set_index('번호').loc[1]
+    assert row['bonus_count'] == 4
+    assert row['next_main_observed'] == 2 and row['next_main_hits'] == 1
+    assert row['next_main_pending'] == 2 and row['next_main_rate'] == 50
+    limited = summarize_bonus(frame, start=1, end=5)['summary'].set_index('번호').loc[1]
+    assert limited['next_main_observed'] == 1 and limited['next_main_hits'] == 1
+    assert limited['next_main_pending'] == 2
+    events = result['events'].set_index('회차')
+    assert pd.isna(events.at[3, 'next_main_hit'])
+    assert pd.isna(events.at[6, 'next_main_hit'])
+
+
+def test_bonus_followup_empty_schema_and_future_range_invariance():
+    frame = appearance_history(30, 'bonus', hits=range(1,31,3))
+    early = summarize_bonus(frame[frame['회차'].le(20)], start=1, end=20)
+    full = summarize_bonus(frame, start=1, end=20)
+    for key in ('summary','events'):
+        pd.testing.assert_frame_equal(early[key], full[key])
+    empty = summarize_bonus(prepare_trend_data(pd.DataFrame(), pd.DataFrame()))
+    assert empty['events'].dtypes.to_dict() == full['events'].dtypes.to_dict()
+    assert empty['summary']['next_main_observed'].eq(0).all()
