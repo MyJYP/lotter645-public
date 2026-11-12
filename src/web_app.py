@@ -2,7 +2,6 @@
 로또 645 데이터 분석 및 번호 추천 웹 애플리케이션
 Streamlit 기반 인터랙티브 대시보드
 """
-# Release v6.2.30: reload the entry point with the approved number-trend UI.
 import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
