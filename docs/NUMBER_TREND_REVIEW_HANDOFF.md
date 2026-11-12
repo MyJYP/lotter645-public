@@ -1,10 +1,10 @@
 # MAC23_Lect 코드리뷰 인계
 
-최신 요청은 T06 P2 수정 재리뷰와 T07·T08 개발 리뷰다. 현재 로컬 v6.2.15, T01~T08 구현 완료이며 남은 범위는 T09~T18이다. 기준 커밋은 `70a4ceabf665f81d3e7a46e856dd435caffda67a`이고 변경은 미커밋 상태다.
+## 현재 상태
 
-변경 파일은 `src/time_series.py`, `tests/test_number_trends.py`, `VERSION`과 관련 문서다. T06은 원본 필드별 오류 사유가 최종 사유에서 유실되는 P2를 재현·수정했다. 관련 테스트 141개 통과. T07·T08은 실제 전체·최근 120회·최근 60회, 두 금액 기준으로 누계·평균 270건과 합계 보존을 검산했다. 알려진 수정 대기 결함은 현재 개발 검증에서 추가 발견되지 않았으며 통계·UI·전체 통합 검증은 후속 범위다.
+T01~T17 구현·검증 완료, T18 공개 배포 확인 진행 중이다. 현재 릴리스는 v6.2.29이다. T09~T12의 MAC23_Lect 결과를 각 리뷰 파일에 반영했고, 나머지는 별도 독립 리뷰 에이전트의 고정 커밋 검토를 반영했다. 최종 검토 커밋 `791841e`에서 전체 184개 테스트가 통과했으며 독립 리뷰 게이트를 통과했다. T13 표시 누락과 기존 패턴 UI 테스트의 무작위 의존성은 수정·재검증했다.
 
-리뷰 대상과 검증 결과는 [T06](reviews/T06.md), [T07](reviews/T07.md), [T08](reviews/T08.md)에 기록했다. 인계 문서를 기준으로 리뷰하고 결과를 MAC21-Vcoding에 전달해 주세요. 각 결과는 해당 태스크 리뷰 파일에 남겨 주세요. 아래 내용은 이전 인계 이력이다.
+태스크별 커밋과 변경·검증 결과는 아래의 누적 인계 기록과 docs/reviews/Txx.md를 기준으로 확인한다. 실제 MAC23 스레드 자동 전송은 active-writer 오류가 지속되어 문서·worktree를 통해 결과를 수신했다. 아래는 이전 인계 이력이다.
 
 ## 대상과 완료 범위
 
@@ -94,3 +94,66 @@ T05·T06 구현 후 지정 MAC23_Lect 스레드로 재요청했으나 `already h
 
 
 최신 T06 수정·T07·T08 리뷰 요청도 지정 스레드의 `already has an active writer (code -32600)` 오류로 거부됐다. 요청 문서와 태스크별 리뷰 자료는 준비되어 있으며 자동 전송은 대기 상태다.
+
+
+## T09 최신 커밋 인계
+
+검토 커밋 `5d63ec6053abc9a2888c9cc9b407afb3369bafa2`, v6.2.16. 보너스 출현률·최근 등장·완전 관측 간격·본번호 비교 집계
+
+검증은 관련 테스트 143개 통과. 변경 파일은 src/time_series.py, tests/test_number_trends.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T09.md, docs/reviews/README.md다. 남은 범위는 T10~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T09.md에 기록한다.
+
+
+## T10 최신 커밋 인계
+
+검토 커밋 `ea25451a94dc09427dcfb248175733d58b906b17`, v6.2.17. 보너스 다음 회차 본번호 성공·관측 가능·미완료 집계
+
+검증은 관련 테스트 145개 통과. 변경 파일은 src/time_series.py, tests/test_number_trends.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T10.md, docs/reviews/README.md다. 남은 범위는 T11~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T10.md에 기록한다.
+
+
+## T11 최신 커밋 인계
+
+검토 커밋 `18597de1de6d33ee61323dc943e7a6c328623ecf`, v6.2.18. 보너스 등장 회차의 2등 총액·게임 수·제외 사유 연결
+
+검증은 관련 테스트 146개 통과. 변경 파일은 src/time_series.py, tests/test_number_trends.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T11.md, docs/reviews/README.md다. 남은 범위는 T12~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T11.md에 기록한다.
+
+
+## T12 최신 커밋 인계
+
+검토 커밋 `abb8b22e6c175b850f19285afb2b8154fc27ef2b`, v6.2.19. 데이터 탐색 새 탭·세부 화면 선택·공통 출처와 오류 처리 연결
+
+검증은 Streamlit 진입·조회 선택 테스트 1개 통과. 변경 파일은 src/number_trend_ui.py, src/web_app.py, tests/test_number_trend_ui.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T12.md, docs/reviews/README.md다. 남은 범위는 T13~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T12.md에 기록한다.
+
+
+## T13 최신 커밋 인계
+
+검토 커밋 `ff7fb9cbf8fcf80e999a308bd32fc03613df2e08`, v6.2.20. 번호별 이동평균·교차·실제 출현 차트와 표 선택 연결
+
+검증은 Streamlit 위젯·차트·표 번호 선택 테스트 2개 통과. 변경 파일은 src/number_trend_ui.py, tests/test_number_trend_ui.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T13.md, docs/reviews/README.md다. 남은 범위는 T14~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T13.md에 기록한다.
+
+
+## T14 최신 커밋 인계
+
+검토 커밋 `286525c0bab69fd79ea2c0217d24824765ca80bf`, v6.2.21. 당첨금 기준·기간·최대6개 비교·누계순위·회차상세 화면
+
+검증은 Streamlit 화면·기준 전환·조회 기간·빈 선택 테스트 3개 통과. 변경 파일은 src/number_trend_ui.py, tests/test_number_trend_ui.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T14.md, docs/reviews/README.md다. 남은 범위는 T15~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T14.md에 기록한다.
+
+
+## T15 최신 커밋 인계
+
+검토 커밋 `71a9aee4c6d1b7a0ecfdf76c084f268596a87c29`, v6.2.23. 보너스 전용 차트·순위·후속 관측·2등 금액 화면 완성
+
+검증은 Streamlit 세 화면 테스트 5개 통과. 변경 파일은 src/number_trend_ui.py, tests/test_number_trend_ui.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T15.md, docs/reviews/README.md다. 남은 범위는 T16~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T15.md에 기록한다.
+
+
+## T16 최신 커밋 인계
+
+검토 커밋 `cbdc8a5bd997bcdc78c6bfa2af83771c2663540d`, v6.2.25. 계산 통합 회귀·정확한 금액·관측 분모·미래 자료 불변성 검증
+
+검증은 전체 테스트 180개 통과. 변경 파일은 tests/test_number_trends.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T16.md, docs/reviews/README.md다. 남은 범위는 T17~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T16.md에 기록한다.
+
+
+## T17 최신 커밋 인계
+
+검토 커밋 `fbff663eb51e1e013ec5c3e00ab399470766d768`, v6.2.26. 실제 앱 경로·빈/오류 피드백·세션 분리·브라우저 행 선택·모바일 검증
+
+검증은 UI AppTest 9개 및 Chrome 세 화면·번호/전체기간/체크박스 선택 통과, 390px 가로 넘침·JS 오류 없음. 변경 파일은 src/number_trend_ui.py, tests/test_number_trend_ui.py, VERSION, docs/NUMBER_TREND_TASKS.md, docs/reviews/T17.md, docs/reviews/README.md다. 남은 범위는 T18~T18이다. 이번 작업의 개발 검증에서 추가 미해결 결함은 발견하지 못했으며 독립 리뷰 판정은 docs/reviews/T17.md에 기록한다.
