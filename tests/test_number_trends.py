@@ -640,3 +640,58 @@ def test_bonus_second_prize_totals_zero_games_and_exclusion_reasons():
     assert sum(summary['second_prize_total'])==sum(events['second_amount'].dropna())
     limited=summarize_bonus(prepared,start=2,end=3)['summary'].set_index('번호')
     assert limited.at[1,'second_prize_total']==0
+
+
+@pytest.mark.parametrize('seed', [16,161])
+def test_joint_bonus_and_prize_statistics_match_independent_period_oracle(seed):
+    import random
+    rng=random.Random(seed)
+    rows=[]
+    prizes=[]
+    for draw in range(1,41):
+        if draw in (13,29):
+            continue
+        numbers=rng.sample(range(1,46),7)
+        rows.append({'회차':draw,'당첨번호':numbers[:6],
+                     '보너스번호':pd.NA if draw==17 else numbers[6]})
+        prizes.append({'회차':draw,'1등 당첨액':None if draw==21 else str(draw*11+1),
+                       '1등 당첨자수':0 if draw==23 else 2,
+                       '2등 당첨액':str(draw*7+1),'2등 당첨자수':3})
+    frame=pd.DataFrame(rows)
+    prepared=prepare_trend_data(frame,pd.DataFrame(prizes))
+    bonus=summarize_bonus(prepared,start=10,end=35)
+    lookup={row['회차']:row for row in rows if 10<=row['회차']<=35}
+    bonus_summary=bonus['summary'].set_index('번호')
+    for number in range(1,46):
+        events=[draw for draw,row in lookup.items() if pd.notna(row['보너스번호']) and row['보너스번호']==number]
+        observable=[draw for draw in events if draw+1 in lookup]
+        assert bonus_summary.at[number,'bonus_count']==len(events)
+        assert bonus_summary.at[number,'next_main_observed']==len(observable)
+        assert bonus_summary.at[number,'next_main_hits']==sum(number in lookup[draw+1]['당첨번호'] for draw in observable)
+        assert bonus_summary.at[number,'second_prize_total']==sum((draw*7+1)*3 for draw in events)
+    for basis in ['total','per_game']:
+        allocation=build_prize_allocation(prepared,start=10,end=35,basis=basis)
+        expected=[0]*46
+        for draw,row in lookup.items():
+            if draw==21:
+                continue
+            amount=0 if draw==23 else (draw*11+1)*(2 if basis=='total' else 1)
+            for number in row['당첨번호']:
+                expected[number]+=amount
+        assert allocation['summary']['cumulative_numerator'].tolist()==expected[1:]
+        assert sum(expected)==allocation['coverage']['total_amount']*6
+        pd.testing.assert_frame_equal(allocation['summary'],build_prize_allocation(prepared[prepared['회차'].le(35)],10,35,basis)['summary'])
+
+
+def test_all_missing_bonus_retains_valid_main_denominator_and_no_fake_events():
+    frame=appearance_history(25)
+    frame['보너스번호']=pd.NA
+    prepared=prepare_trend_data(frame,pd.DataFrame())
+    summary=summarize_bonus(prepared)
+    assert summary['events'].empty
+    assert summary['summary']['bonus_rate'].isna().all()
+    assert summary['summary']['main_rate'].notna().all()
+    assert summary['summary']['next_main_rate'].isna().all()
+    assert summary['coverage']['missing_bonus_rounds']==25
+    assert build_appearance(prepared,'main')['ma_20'].notna().any()
+    assert build_appearance(prepared,'bonus')['ma_20'].isna().all()
