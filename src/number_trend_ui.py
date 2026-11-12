@@ -98,6 +98,7 @@ def _render_appearance(history, kind='main'):
         'ma_60': '60회 출현률 (%)', 'ma_120': '120회 출현률 (%)',
         'difference': '5회 − 20회 (%p)', 'cross': '이번 회차 교차'})
     st.write('전체 번호 한눈에 보기')
+    st.caption('행 왼쪽 체크박스를 선택하면 관심 번호가 바뀝니다.')
     table_key = f'{prefix}_table'
     st.dataframe(latest, hide_index=True, width='stretch', key=table_key,
                  on_select=lambda: _apply_number_selection(table_key, f'{prefix}_number', latest['번호'].tolist()),
