@@ -46,3 +46,20 @@ def test_appearance_number_period_windows_and_table_selection():
     selected = AppTest.from_string(callback_script, default_timeout=30).run()
     assert not selected.exception
     assert selected.selectbox(key='number_trend_main_number').value == 7
+
+
+
+def test_prize_basis_period_comparison_and_empty_selection():
+    app = AppTest.from_string(SCRIPT, default_timeout=30).run()
+    app.radio(key='number_trend_view').set_value('당첨금 배분').run()
+    assert not app.exception
+    total = app.metric[0].value
+    app.selectbox(key='number_trend_prize_basis').set_value('per_game').run()
+    assert not app.exception and app.metric[0].value != total
+    app.selectbox(key='number_trend_prize_period').set_value(60).run()
+    app.multiselect(key='number_trend_prize_numbers').set_value([1,38]).run()
+    assert not app.exception
+    assert len(app.get('plotly_chart')) == 1
+    app.multiselect(key='number_trend_prize_numbers').set_value([]).run()
+    assert not app.exception and not app.get('plotly_chart')
+    assert any('번호를 선택' in item.value for item in app.info)

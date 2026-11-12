@@ -95,6 +95,66 @@ def _render_appearance(history, kind='main'):
                  selection_mode='single-row')
     return number, int(appearance['회차'].min()), int(appearance['회차'].max())
 
+
+def _won_to_eok(value):
+    return None if pd.isna(value) else float(value) / 100000000
+
+
+def _render_prizes(history):
+    controls = st.columns(2)
+    basis = controls[0].selectbox('금액 기준', ['total', 'per_game'],
+                                 format_func=lambda value: '1등 총액 기준' if value == 'total' else '1게임당 금액 기준',
+                                 key='number_trend_prize_basis')
+    period = controls[1].selectbox('집계 기간', [None, 120, 60],
+                                  format_func=lambda n: '전체' if n is None else f'최근 {n}회',
+                                  key='number_trend_prize_period')
+    numbers = st.multiselect('비교할 번호', list(range(1, 46)), default=[1], max_selections=6,
+                             key='number_trend_prize_numbers')
+    end = int(history['회차'].max())
+    start = int(history['회차'].min()) if period is None else max(int(history['회차'].min()), end - period + 1)
+    result = cached_allocation(history, start=start, end=end, basis=basis)
+    coverage = result['coverage']
+    st.caption(f'{start}~{end}회 · 공시 당첨금 기준·세전 · 금액 표시는 반올림합니다.')
+    st.write('각 회차의 기준 금액을 본번호 6개에 똑같이 나눠 누적한 분석용 금액입니다.')
+    metrics = st.columns(4)
+    metrics[0].metric('집계한 금액 합계 (억 원)', f"{coverage['total_amount'] / 100000000:,.2f}")
+    for column, label, field in zip(metrics[1:], ['유효 금액 회차', '금액 제외 회차', '미관측 회차'],
+                                     ['valid_prize_rounds', 'excluded_prize_rounds', 'missing_rounds']):
+        column.metric(label, coverage[field])
+    if not coverage['valid_prize_rounds']:
+        st.warning('선택 기간에 집계 가능한 금액이 없습니다. 회차 상세의 제외 사유를 확인해 주세요.')
+    elif coverage['excluded_prize_rounds'] or coverage['missing_rounds']:
+        st.info('누계는 관측한 유효 금액의 합계입니다. 제외·미관측 회차는 상세에서 확인할 수 있습니다.')
+    figure = go.Figure()
+    for number in numbers:
+        series = result['series'].loc[result['series']['번호'].eq(number)]
+        values = [None if pd.isna(amount) else int(total) / 600000000
+                  for amount, total in zip(series['allocation_numerator'], series['cumulative_numerator'])]
+        figure.add_trace(go.Scatter(x=series['회차'], y=values, mode='lines',
+                                   name=f'{number}번', connectgaps=False))
+    if numbers:
+        figure.update_layout(height=360, xaxis_title='회차', yaxis_title='누적 배분액 (억 원)',
+                             hovermode='x unified', legend={'orientation': 'h'})
+        st.plotly_chart(figure, width='stretch', key='number_trend_prize_chart')
+    else:
+        st.info('누적선을 비교할 번호를 선택해 주세요.')
+    summary = result['summary'].sort_values('cumulative_numerator', ascending=False, kind='stable').copy()
+    summary['배분 누계 (억 원)'] = summary['cumulative_numerator'].map(lambda amount: int(amount) / 600000000)
+    summary['출현 회당 평균 (억 원)'] = summary['average_allocation'].map(_won_to_eok)
+    display = summary[['번호', '배분 누계 (억 원)', 'appearance_count',
+                       'valid_appearance_count', '출현 회당 평균 (억 원)']].rename(columns={
+        'appearance_count': '본번호 출현 횟수', 'valid_appearance_count': '금액 유효 출현 횟수'})
+    st.write('번호별 당첨금 배분 누계')
+    st.dataframe(display, hide_index=True, width='stretch', key='number_trend_prize_table')
+    with st.expander('회차별 금액·제외 사유'):
+        details = result['rounds'].copy()
+        details['균등 배분액 (억 원)'] = details['amount'].map(
+            lambda value: None if pd.isna(value) else int(value) / 600000000)
+        details = details.rename(columns={'per_game': '게임당 금액 (원)', 'winning_games': '당첨게임 수',
+                                          'amount': '사용 금액 (원)', 'exclusion_reason': '제외 사유',
+                                          'amount_source': '산출 근거'})
+        st.dataframe(details, hide_index=True, width='stretch')
+
 def render_number_trends(loader):
     st.subheader('재미로 보는 번호 차트')
     try:
@@ -117,4 +177,6 @@ def render_number_trends(loader):
              horizontal=True, key='number_trend_view')
     if view == '출현 흐름':
         _render_appearance(history)
+    elif view == '당첨금 배분':
+        _render_prizes(history)
     _sources()
